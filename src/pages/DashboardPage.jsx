@@ -79,6 +79,11 @@ export default function DashboardPage() {
   const incomingCommissionPending = incomingFromPrior.filter(p => !p.received).reduce((s, p) => s + p.amount * (p.deal.commissionRate / 100), 0)
   const incomingCommissionReceived = incomingFromPrior.filter(p => p.received).reduce((s, p) => s + p.amount * (p.deal.commissionRate / 100), 0)
 
+  // All backend payments due this month across ALL deals (for recurrings bar)
+  const allIncomingTotal    = incoming.reduce((s, p) => s + p.amount, 0)
+  const allIncomingReceived = incoming.filter(p => p.received).reduce((s, p) => s + p.amount, 0)
+  const recurringsPct = allIncomingTotal > 0 ? Math.min((allIncomingReceived / allIncomingTotal) * 100, 100) : 0
+
   const cashPct       = Math.min((stats.cashCollected / CASH_GOAL) * 100, 100)
   const commissionPct = Math.min((stats.commissionEarned / COMMISSION_GOAL) * 100, 100)
 
@@ -178,6 +183,36 @@ export default function DashboardPage() {
             </div>
             <div className="text-xs text-gray-400 mt-1 text-right">{cashPct.toFixed(1)}% of goal</div>
           </div>
+          {/* Recurrings bar — only shown when there are splits due this month */}
+          {allIncomingTotal > 0 && (
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="font-semibold text-gray-700">Recurrings collected</span>
+                <span className="text-gray-500">
+                  {fmt(allIncomingReceived)} <span className="text-gray-300">of</span> {fmt(allIncomingTotal)}
+                  {allIncomingTotal - allIncomingReceived > 0 && (
+                    <span className="ml-1.5 text-amber-500 font-medium text-xs">· {fmt(allIncomingTotal - allIncomingReceived)} pending</span>
+                  )}
+                </span>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${recurringsPct}%`,
+                    background: recurringsPct >= 100
+                      ? '#10b981'
+                      : 'linear-gradient(to right, #10b981, #f59e0b)',
+                  }}
+                />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-gray-400">{incoming.filter(p => p.received).length} of {incoming.length} payment{incoming.length !== 1 ? 's' : ''} received</span>
+                <span className="text-xs text-gray-400">{recurringsPct.toFixed(0)}% collected</span>
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="font-semibold text-gray-700">Commission earned</span>
