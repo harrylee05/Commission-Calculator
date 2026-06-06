@@ -1,16 +1,19 @@
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ProductProvider } from './context/ProductContext'
 import LoginPage from './pages/LoginPage'
-import CalculatorPage from './pages/CalculatorPage'
+import DashboardPage from './pages/DashboardPage'
 
 function AppContent() {
   const { user } = useAuth()
-  return user ? <CalculatorPage /> : <LoginPage />
+  return user ? <DashboardPage /> : <LoginPage />
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ProductProvider>
+        <AppContent />
+      </ProductProvider>
     </AuthProvider>
   )
 }

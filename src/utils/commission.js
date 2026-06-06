@@ -1,38 +1,49 @@
-export const COMMISSION_RATE = 0.10  // 10% base rate
+export function calcProduct(p) {
+  const contractValue = parseFloat(p.contractValue) || 0
+  const cashCollected = parseFloat(p.cashCollected) || 0
+  const commissionRate = (parseFloat(p.commissionPercent) || 0) / 100
+  const numPayments = parseInt(p.numPayments) || 0
+  const productPrice = parseFloat(p.productPrice) || 0
 
-export function calculateTotals(lineItems, cashCollected, installments, installmentAmount) {
-  const subtotal = lineItems.reduce((sum, item) => {
-    const qty = parseFloat(item.quantity) || 0
-    const price = parseFloat(item.price) || 0
-    return sum + qty * price
-  }, 0)
-
-  const cash = parseFloat(cashCollected) || 0
-  const numInstallments = parseInt(installments) || 0
-  const instAmt = parseFloat(installmentAmount) || 0
-  const futureRevenue = numInstallments * instAmt
-  const totalRevenue = cash + futureRevenue
-
-  const commissionBase = subtotal
-  const commission = commissionBase * COMMISSION_RATE
-
-  const cashCommission = Math.min(cash, subtotal) * COMMISSION_RATE
-  const futureCommission = Math.min(futureRevenue, Math.max(0, subtotal - cash)) * COMMISSION_RATE
+  const totalCommission = contractValue * commissionRate
+  const cashCommission = cashCollected * commissionRate
+  const futureCommission = totalCommission - cashCommission
+  const remaining = contractValue - cashCollected
+  const paymentAmount = numPayments > 0 ? remaining / numPayments : 0
 
   return {
-    subtotal,
-    cash,
-    futureRevenue,
-    totalRevenue,
-    commission,
+    totalCommission,
     cashCommission,
     futureCommission,
-    numInstallments,
-    instAmt,
-    balance: subtotal - totalRevenue,
+    remaining,
+    paymentAmount,
+    contractValue,
+    cashCollected,
+    commissionRate,
+    numPayments,
+    productPrice,
   }
 }
 
-export function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
+export function calcDashboard(products) {
+  return products.reduce(
+    (acc, p) => {
+      const c = calcProduct(p)
+      acc.totalContractValue += c.contractValue
+      acc.totalCashCollected += c.cashCollected
+      acc.totalCommission += c.totalCommission
+      acc.cashCommission += c.cashCommission
+      acc.futureCommission += c.futureCommission
+      return acc
+    },
+    { totalContractValue: 0, totalCashCollected: 0, totalCommission: 0, cashCommission: 0, futureCommission: 0 }
+  )
+}
+
+export function fmt(value) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value || 0)
+}
+
+export function fmtPct(value) {
+  return `${parseFloat(value || 0).toFixed(1)}%`
 }
