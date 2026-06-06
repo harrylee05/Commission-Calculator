@@ -49,9 +49,37 @@ export function DealProvider({ children }) {
     )
   }
 
+  function exportDeals() {
+    const json = JSON.stringify(deals, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `tjr-deals-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function importDeals(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result)
+          if (!Array.isArray(parsed)) throw new Error('Invalid format')
+          setDeals(parsed)
+          resolve(parsed.length)
+        } catch {
+          reject(new Error('Could not read file — make sure it\'s a valid TJR export.'))
+        }
+      }
+      reader.readAsText(file)
+    })
+  }
+
   return (
     <DealContext.Provider
-      value={{ deals, addDeal, updateDeal, deleteDeal, markPaymentReceived }}
+      value={{ deals, addDeal, updateDeal, deleteDeal, markPaymentReceived, exportDeals, importDeals }}
     >
       {children}
     </DealContext.Provider>

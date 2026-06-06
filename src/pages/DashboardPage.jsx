@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useDeals } from '../context/DealContext'
 import { calcDashboard, getIncomingPayments, fmt, fmtPct } from '../utils/deals'
 import AddDealForm from '../components/AddDealForm'
@@ -51,7 +51,22 @@ function StatCard({ label, value, accent, bg, icon, sub }) {
 }
 
 export default function DashboardPage() {
-  const { deals, markPaymentReceived } = useDeals()
+  const { deals, markPaymentReceived, exportDeals, importDeals } = useDeals()
+  const importRef = useRef(null)
+  const [importMsg, setImportMsg] = useState('')
+
+  async function handleImport(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    try {
+      const count = await importDeals(file)
+      setImportMsg(`✓ Imported ${count} deal${count !== 1 ? 's' : ''}`)
+    } catch (err) {
+      setImportMsg(`⚠ ${err.message}`)
+    }
+    e.target.value = ''
+    setTimeout(() => setImportMsg(''), 4000)
+  }
   const now = new Date()
   const [view, setView] = useState('dashboard')
   const [month, setMonth] = useState(now.getMonth())
@@ -132,7 +147,7 @@ export default function DashboardPage() {
   // ── Dashboard ──────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 relative">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
@@ -140,13 +155,44 @@ export default function DashboardPage() {
             </div>
             <span className="text-xl font-bold text-gray-900">TJR Trades</span>
           </div>
-          <button onClick={() => setView('add')}
-            className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Deal
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Import */}
+            <input ref={importRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+            <button
+              onClick={() => importRef.current.click()}
+              title="Import deals from file"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-xl bg-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Import
+            </button>
+            {/* Export */}
+            <button
+              onClick={exportDeals}
+              title="Export deals to file"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-xl bg-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
+            </button>
+            <button onClick={() => setView('add')}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Deal
+            </button>
+          </div>
+          {/* Import feedback toast */}
+          {importMsg && (
+            <div className="absolute top-16 right-4 bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-lg z-20">
+              {importMsg}
+            </div>
+          )}
         </div>
       </header>
 
