@@ -52,17 +52,17 @@ const PAYMENT_METHODS = [
   },
   {
     key: 'split_2500',
-    label: '$2,500 / $2,500',
+    label: '50 / 50 Split',
     icon: '✂️',
-    desc: '$2,500 today + $2,500 in 30 days',
+    desc: 'Half today + half in 30 days',
     badge: 'Commission in 2 tranches',
     badgeColor: 'text-amber-700 bg-amber-50 border-amber-200',
   },
   {
     key: 'split_2000_1500',
-    label: '$2k + 2 × $1,500',
+    label: '40 / 30 / 30 Split',
     icon: '🔀',
-    desc: '$2,000 today + $1,500 × 2',
+    desc: '40% today + two equal payments',
     badge: 'Commission in 3 tranches',
     badgeColor: 'text-amber-700 bg-amber-50 border-amber-200',
   },
@@ -144,22 +144,28 @@ export default function AddDealForm({ onSave }) {
   // ── Payment method selection ───────────────────────────────────────────────
   function applyMethod(method) {
     setPaymentMethod(method)
-    const cv5k = parseFloat(contractValue) || 5000
+    const total = parseFloat(contractValue) || 5000
+    const half  = +(total / 2).toFixed(2)
+    const third = +(total / 3).toFixed(2)
 
     if (method === 'cash') {
-      setUpfront(String(cv5k))
+      setUpfront(String(total))
       setBackendPayments([])
     } else if (method === 'payva') {
-      setUpfront(String(cv5k))
+      setUpfront(String(total))
       setBackendPayments([])
     } else if (method === 'split_2500') {
-      setUpfront('2500')
-      setBackendPayments([{ id: uuid(), amount: '2500', dueDate: addDays(dateSigned, 30), received: false, receivedDate: null }])
+      // Always 50/50 regardless of ticket price
+      setUpfront(String(half))
+      setBackendPayments([{ id: uuid(), amount: String(half), dueDate: addDays(dateSigned, 30), received: false, receivedDate: null }])
     } else if (method === 'split_2000_1500') {
-      setUpfront('2000')
+      // ~40% upfront, two equal backend payments
+      const upfrontAmt = +(total * 0.4).toFixed(2)
+      const backAmt    = +((total - upfrontAmt) / 2).toFixed(2)
+      setUpfront(String(upfrontAmt))
       setBackendPayments([
-        { id: uuid(), amount: '1500', dueDate: addDays(dateSigned, 30), received: false, receivedDate: null },
-        { id: uuid(), amount: '1500', dueDate: addDays(dateSigned, 60), received: false, receivedDate: null },
+        { id: uuid(), amount: String(backAmt), dueDate: addDays(dateSigned, 30), received: false, receivedDate: null },
+        { id: uuid(), amount: String(backAmt), dueDate: addDays(dateSigned, 60), received: false, receivedDate: null },
       ])
     } else if (method === 'custom') {
       setUpfront('')
@@ -300,7 +306,7 @@ export default function AddDealForm({ onSave }) {
               >
                 <div className="text-2xl mb-1">🤝</div>
                 <div className="font-bold text-gray-900">New Deal</div>
-                <div className="text-xs text-gray-500 mt-0.5">The Blueprint — $5,000</div>
+                <div className="text-xs text-gray-500 mt-0.5">The Blueprint</div>
               </button>
 
               {/* Renewal + Upsell — smaller */}
@@ -356,15 +362,25 @@ export default function AddDealForm({ onSave }) {
             </div>
           </div>
 
-          {/* Contract value (upsell only) + Date signed */}
+          {/* Contract value (always shown) + Date signed */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {dealType === 'upsell' && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Contract value</label>
-                <DollarInput value={contractValue} onChange={setContractValue} />
-              </div>
-            )}
-            <div className={dealType !== 'upsell' ? 'sm:col-span-2' : ''}>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Final ticket price
+                {dealType !== 'upsell' && parseFloat(contractValue) !== 5000 && contractValue !== '' && (
+                  <span className="ml-2 text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                    Custom price
+                  </span>
+                )}
+              </label>
+              <DollarInput value={contractValue} onChange={val => { setContractValue(val); setPaymentMethod('') }} />
+              {dealType !== 'upsell' && (
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Default $5,000 — adjust for risk pricing or negotiated deals
+                </p>
+              )}
+            </div>
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date signed</label>
               <input
                 type="date"
