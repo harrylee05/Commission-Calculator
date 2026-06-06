@@ -59,10 +59,12 @@ export default function DashboardPage() {
 
   const stats = calcDashboard(deals, month, year)
 
-  const monthDeals = deals.filter(d => {
-    const dt = new Date(d.createdAt)
-    return dt.getMonth() === month && dt.getFullYear() === year
-  })
+  const monthDeals = deals
+    .filter(d => {
+      const dt = new Date(d.createdAt)
+      return dt.getMonth() === month && dt.getFullYear() === year
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
   // Incoming payments due this month from ANY deal (may be from prior months)
   const incoming = getIncomingPayments(deals, month, year)
