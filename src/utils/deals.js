@@ -49,6 +49,21 @@ export function calcDeal(deal) {
   }
 }
 
+// Returns backend payments from ANY deal whose dueDate falls in the given month/year
+export function getIncomingPayments(deals, month, year) {
+  const result = []
+  for (const deal of deals) {
+    for (const payment of deal.backendPayments || []) {
+      if (!payment.dueDate) continue
+      const d = new Date(payment.dueDate)
+      if (d.getMonth() === month && d.getFullYear() === year) {
+        result.push({ ...payment, deal })
+      }
+    }
+  }
+  return result.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+}
+
 export function calcDashboard(deals, month, year) {
   const filtered = deals.filter((d) => {
     const dt = new Date(d.createdAt)
