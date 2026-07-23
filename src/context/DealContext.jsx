@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const DealContext = createContext(null)
 
-const STORAGE_KEY = 'tjr_deals'
+const STORAGE_KEY = 'mmt_deals'
 
 export function DealProvider({ children }) {
   const [deals, setDeals] = useState(() => {
@@ -55,7 +55,7 @@ export function DealProvider({ children }) {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `tjr-deals-${new Date().toISOString().split('T')[0]}.json`
+    a.download = `mmt-deals-${new Date().toISOString().split('T')[0]}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -70,7 +70,7 @@ export function DealProvider({ children }) {
           setDeals(parsed)
           resolve(parsed.length)
         } catch {
-          reject(new Error('Could not read file — make sure it\'s a valid TJR export.'))
+          reject(new Error('Could not read file — make sure it\'s a valid MMT export.'))
         }
       }
       reader.readAsText(file)

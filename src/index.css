@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 * { box-sizing: border-box; }
-body { margin: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; background: #030712; }
 #root { min-height: 100vh; }
-
-input[type=range] { accent-color: #2550ea; }
+input[type=range] { accent-color: #f59e0b; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.5); }

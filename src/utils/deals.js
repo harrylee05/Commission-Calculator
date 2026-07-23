@@ -1,22 +1,29 @@
+export const COMMISSION_RATE = 0.10
+
 export const DEAL_TYPE_LABELS = {
   new: 'New Deal',
   renewal: 'Renewal',
   upsell: 'Upsell',
-  payva: 'Payva (PIF)',
 }
 
 export const DEAL_TYPE_COLORS = {
-  new: 'blue',
+  new: 'amber',
   renewal: 'purple',
   upsell: 'orange',
-  payva: 'green',
 }
 
+export const MMT_PRODUCTS = [
+  { key: 'elite',   label: 'MMT Elite',   price: 9900  },
+  { key: 'private', label: 'MMT Private', price: 16500 },
+  { key: 'custom',  label: 'Custom',      price: null  },
+]
+
 export function calcDeal(deal) {
-  const rate = deal.commissionRate / 100
+  const rate = COMMISSION_RATE
   const contractValue = deal.contractValue
 
-  if (deal.type === 'payva') {
+  // Lifestyle Financing or 1-Pay (pif) — full commission earned immediately
+  if (deal.paymentMethod === 'lifestyle' || deal.paymentMethod === '1pay') {
     return {
       earnedCommission: contractValue * rate,
       pendingCommission: 0,
@@ -92,15 +99,15 @@ export function calcDashboard(deals, month, year) {
   }
 }
 
-const usdFormatter = new Intl.NumberFormat('en-US', {
+const audFormatter = new Intl.NumberFormat('en-AU', {
   style: 'currency',
-  currency: 'USD',
+  currency: 'AUD',
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 })
 
 export function fmt(value) {
-  return usdFormatter.format(value)
+  return audFormatter.format(value)
 }
 
 export function fmtPct(value) {
